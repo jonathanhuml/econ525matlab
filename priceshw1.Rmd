@@ -1,0 +1,36 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+library(readr)
+library(quantmod)
+library(tidyquant)
+
+
+symbols <- read.csv("~/Desktop/525/tickers1.txt", sep="", header = FALSE)
+symbols <-as.matrix(symbols)
+
+Ra <- c(symbols) %>% 
+  tq_get(get  = "stock.prices",
+  from = "2013-01-01", 
+  to = "2019-01-01") %>%
+  group_by(symbol) %>%
+    tq_transmute(select     = adjusted, 
+                 mutate_fun = periodReturn, 
+                 period     = "monthly", 
+                 col_rename = "LogReturn", 
+                 type = "log")
+```
+
+```{r}
+Ra <- Ra %>% select(date, LogReturn, symbol) %>% spread(key = symbol, value = LogReturn)
+
+Ra <- Ra %>% select_if(~ !any(is.na(.)))
+
+write.csv(Ra, file = "returns.csv")
+
+```
+
